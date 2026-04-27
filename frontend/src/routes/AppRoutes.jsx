@@ -1,40 +1,40 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
-// Shared
 import LoginPage from '../pages/LoginPage';
 import RegistrationPage from '../pages/RegistrationPage';
 import HomePage from '../pages/HomePage';
 
-// Employee
 import OnboardingApplicationPage from '../pages/OnboardingApplicationPage';
 import PersonalInformationPage from '../pages/PersonalInformationPage';
 import VisaStatusManagementPage from '../pages/VisaStatusManagementPage';
 
-// HR
 import EmployeeProfilesPage from '../pages/hr/EmployeeProfilesPage';
 import HRVisaStatusPage from '../pages/hr/HRVisaStatusPage';
 import HiringManagementPage from '../pages/hr/HiringManagementPage';
 
-// import ProtectedRoute from '../components/common/ProtectedRoute';
+import ProtectedRoute from '../components/common/ProtectedRoute';
 
 export default function AppRoutes() {
-  // TODO: wrap private routes with <ProtectedRoute /> and an HR gate
   return (
     <Routes>
+      {/* Public */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegistrationPage />} />
 
-      {/* Employee */}
-      <Route path="/" element={<HomePage />} />
-      <Route path="/onboarding" element={<OnboardingApplicationPage />} />
-      <Route path="/personal-info" element={<PersonalInformationPage />} />
-      <Route path="/visa-status" element={<VisaStatusManagementPage />} />
+      {/* Authenticated (any role) */}
+      <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+      <Route path="/onboarding" element={<ProtectedRoute role="employee"><OnboardingApplicationPage /></ProtectedRoute>} />
+      <Route path="/personal-info" element={<ProtectedRoute role="employee"><PersonalInformationPage /></ProtectedRoute>} />
+      <Route path="/visa-status" element={<ProtectedRoute role="employee"><VisaStatusManagementPage /></ProtectedRoute>} />
 
-      {/* HR */}
-      <Route path="/hr/employees" element={<EmployeeProfilesPage />} />
-      <Route path="/hr/visa" element={<HRVisaStatusPage />} />
-      <Route path="/hr/hiring" element={<HiringManagementPage />} />
+      {/* HR-only */}
+      <Route path="/hr/employees" element={<ProtectedRoute role="hr"><EmployeeProfilesPage /></ProtectedRoute>} />
+      <Route path="/hr/visa" element={<ProtectedRoute role="hr"><HRVisaStatusPage /></ProtectedRoute>} />
+      <Route path="/hr/hiring" element={<ProtectedRoute role="hr"><HiringManagementPage /></ProtectedRoute>} />
+
+      {/* Catch-all */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
