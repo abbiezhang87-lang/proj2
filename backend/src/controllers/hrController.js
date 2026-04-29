@@ -1,55 +1,65 @@
-// HR — profiles, hiring management, visa review.
+const tokenService = require('../services/tokenService');
+const emailService = require('../services/emailService');
+const asyncHandler = require('../utils/asyncHandler');
+const { isEmail, httpError } = require('../utils/validators');
 
-// --- Employee Profiles ---
-exports.listEmployees = async (_req, res) => {
-  // TODO: return summary list sorted by last name, with count + search filter
-  res.status(501).json({ message: 'Not implemented: listEmployees' });
-};
+// POST /api/hr/tokens
+// Body: { email, name? }
+// Generates a registration token, emails the link to the new hire, and stores
+// a row in RegistrationToken history.
+exports.generateRegistrationToken = asyncHandler(async (req, res) => {
+  const { email, name = '' } = req.body;
+  if (!email) throw httpError(400, 'email is required');
+  if (!isEmail(email)) throw httpError(400, 'Invalid email format');
 
-exports.getEmployeeProfile = async (_req, res) => {
-  // TODO: return full profile of :employeeId
-  res.status(501).json({ message: 'Not implemented: getEmployeeProfile' });
-};
+  const { tokenDoc, link } = await tokenService.generate(email, name);
 
-// --- Hiring Management: Registration Tokens ---
-exports.generateRegistrationToken = async (_req, res) => {
-  // TODO: create token (3h TTL), email link, store history row
-  res.status(501).json({ message: 'Not implemented: generateRegistrationToken' });
-};
+  try {
+    await emailService.sendRegistrationEmail({ to: email, name, link });
+  } catch (err) {
+    // Don't fail the request — log and return the link so HR can resend by hand.
+    console.error('Email send failed:', err.message);
+  }
 
-exports.listTokenHistory = async (_req, res) => {
-  // TODO: return all tokens w/ email, name, link, submitted-or-not
-  res.status(501).json({ message: 'Not implemented: listTokenHistory' });
-};
+  res.status(201).json({ token: tokenDoc, link });
+});
 
-// --- Hiring Management: Onboarding Review ---
-exports.listApplicationsByStatus = async (_req, res) => {
-  // TODO: req.query.status ∈ {pending, approved, rejected}
-  res.status(501).json({ message: 'Not implemented: listApplicationsByStatus' });
-};
+// GET /api/hr/tokens
+exports.listTokenHistory = asyncHandler(async (_req, res) => {
+  const tokens = await tokenService.listHistory();
+  res.json({ tokens });
+});
 
-exports.reviewApplication = async (_req, res) => {
-  // TODO: approve/reject application; optional feedback on reject
-  res.status(501).json({ message: 'Not implemented: reviewApplication' });
-};
+// --- Stubs for later phases (left intentionally not-implemented for now) ---
 
-// --- Visa Status Management (HR side) ---
-exports.listVisaInProgress = async (_req, res) => {
-  // TODO: employees with outstanding OPT steps + next-step label
-  res.status(501).json({ message: 'Not implemented: listVisaInProgress' });
-};
+exports.listEmployees = asyncHandler(async (_req, res) => {
+  res.status(501).json({ message: 'Not implemented' });
+});
 
-exports.listVisaAll = async (_req, res) => {
-  // TODO: every visa-status employee w/ approved docs
-  res.status(501).json({ message: 'Not implemented: listVisaAll' });
-};
+exports.getEmployeeProfile = asyncHandler(async (_req, res) => {
+  res.status(501).json({ message: 'Not implemented' });
+});
 
-exports.reviewVisaDocument = async (_req, res) => {
-  // TODO: approve/reject a specific step (receipt/ead/i983/i20)
-  res.status(501).json({ message: 'Not implemented: reviewVisaDocument' });
-};
+exports.listApplicationsByStatus = asyncHandler(async (_req, res) => {
+  res.status(501).json({ message: 'Not implemented' });
+});
 
-exports.sendNextStepNotification = async (_req, res) => {
-  // TODO: email the employee reminding them of their next OPT step
-  res.status(501).json({ message: 'Not implemented: sendNextStepNotification' });
-};
+exports.reviewApplication = asyncHandler(async (_req, res) => {
+  res.status(501).json({ message: 'Not implemented' });
+});
+
+exports.listVisaInProgress = asyncHandler(async (_req, res) => {
+  res.status(501).json({ message: 'Not implemented' });
+});
+
+exports.listVisaAll = asyncHandler(async (_req, res) => {
+  res.status(501).json({ message: 'Not implemented' });
+});
+
+exports.reviewVisaDocument = asyncHandler(async (_req, res) => {
+  res.status(501).json({ message: 'Not implemented' });
+});
+
+exports.sendNextStepNotification = asyncHandler(async (_req, res) => {
+  res.status(501).json({ message: 'Not implemented' });
+});
