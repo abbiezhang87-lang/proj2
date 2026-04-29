@@ -10,6 +10,7 @@ import PersonalInformationPage from '../pages/PersonalInformationPage';
 import VisaStatusManagementPage from '../pages/VisaStatusManagementPage';
 
 import EmployeeProfilesPage from '../pages/hr/EmployeeProfilesPage';
+import HREmployeeProfilePage from '../pages/hr/HREmployeeProfilePage';
 import HRVisaStatusPage from '../pages/hr/HRVisaStatusPage';
 import HiringManagementPage from '../pages/hr/HiringManagementPage';
 
@@ -30,6 +31,7 @@ export default function AppRoutes() {
 
       {/* HR-only */}
       <Route path="/hr/employees" element={<ProtectedRoute role="hr"><EmployeeProfilesPage /></ProtectedRoute>} />
+      <Route path="/hr/employees/:userId" element={<ProtectedRoute role="hr"><HREmployeeProfilePage /></ProtectedRoute>} />
       <Route path="/hr/visa" element={<ProtectedRoute role="hr"><HRVisaStatusPage /></ProtectedRoute>} />
       <Route path="/hr/hiring" element={<ProtectedRoute role="hr"><HiringManagementPage /></ProtectedRoute>} />
 
