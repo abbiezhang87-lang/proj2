@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
+import { Link as RouterLink } from 'react-router-dom';
 import {
   Box, Paper, Typography, Stack, Button, Alert, TextField,
   Table, TableHead, TableBody, TableRow, TableCell, Chip, IconButton, Tooltip,
-  Tabs, Tab, Dialog, DialogTitle, DialogContent, DialogActions, Divider,
+  Tabs, Tab,
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
@@ -26,10 +27,6 @@ export default function HiringManagementPage() {
   const [totals, setTotals] = useState({ pending: 0, rejected: 0, approved: 0 });
   const [appsLoading, setAppsLoading] = useState(true);
   const [appsError, setAppsError] = useState('');
-
-  const [selected, setSelected] = useState(null);   // currently-viewed application
-  const [feedback, setFeedback] = useState('');
-  const [reviewing, setReviewing] = useState(false);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     defaultValues: { email: '', name: '' },
@@ -76,26 +73,6 @@ export default function HiringManagementPage() {
       setTokenError(err.response?.data?.message || 'Failed to send invitation');
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  // --- review actions ---
-  const review = async (decision) => {
-    if (!selected) return;
-    if (decision === 'reject' && !feedback.trim()) {
-      setAppsError('Feedback is required when rejecting');
-      return;
-    }
-    setReviewing(true);
-    try {
-      await hrApi.reviewApplication(selected._id, { decision, feedback });
-      setSelected(null);
-      setFeedback('');
-      fetchApplications(tab);
-    } catch (err) {
-      setAppsError(err.response?.data?.message || 'Review failed');
-    } finally {
-      setReviewing(false);
     }
   };
 
@@ -256,8 +233,15 @@ export default function HiringManagementPage() {
                     <TableCell>{[a.firstName, a.middleName, a.lastName].filter(Boolean).join(' ')}</TableCell>
                     <TableCell>{a.email}</TableCell>
                     <TableCell align="right">
-                      <Button size="small" onClick={() => { setSelected(a); setFeedback(''); }}>
-                        View application
+                      {/* Spec: opens in a new tab */}
+                      <Button
+                        size="small"
+                        component={RouterLink}
+                        to={`/hr/applications/${a._id}`}
+                        target="_blank"
+                        rel="noopener"
+                      >
+                        View application ↗
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -267,118 +251,6 @@ export default function HiringManagementPage() {
           )}
         </Paper>
       </Stack>
-
-      {/* --- Review dialog --- */}
-      <Dialog
-        open={Boolean(selected)}
-        onClose={() => setSelected(null)}
-        maxWidth="md"
-        fullWidth
-      >
-        {selected && (
-          <>
-            <DialogTitle>
-              {[selected.firstName, selected.middleName, selected.lastName].filter(Boolean).join(' ')}
-              <Typography variant="body2" color="text.secondary">{selected.email}</Typography>
-            </DialogTitle>
-            <DialogContent dividers>
-              <Stack spacing={2}>
-                <Field label="Status" value={selected.status} />
-                {selected.feedback && <Field label="Previous feedback" value={selected.feedback} />}
-                <Divider />
-                <Field label="Preferred name" value={selected.preferredName || '—'} />
-                <Field
-                  label="Address"
-                  value={selected.address
-                    ? `${selected.address.building} ${selected.address.street}, ${selected.address.city}, ${selected.address.state} ${selected.address.zip}`
-                    : '—'}
-                />
-                <Field label="Cell phone" value={selected.cellPhone} />
-                <Field label="Work phone" value={selected.workPhone || '—'} />
-                <Field label="SSN" value={selected.ssn} />
-                <Field label="DOB" value={selected.dob ? String(selected.dob).slice(0, 10) : '—'} />
-                <Field label="Gender" value={selected.gender} />
-                <Field
-                  label="Citizen / PR"
-                  value={selected.isCitizenOrPR ? `Yes — ${selected.residencyType}` : 'No'}
-                />
-                {!selected.isCitizenOrPR && selected.workAuthorization && (
-                  <Field
-                    label="Work authorization"
-                    value={`${selected.workAuthorization.type}${
-                      selected.workAuthorization.otherTitle ? ` (${selected.workAuthorization.otherTitle})` : ''
-                    } · ${String(selected.workAuthorization.startDate || '').slice(0, 10)} → ${String(selected.workAuthorization.endDate || '').slice(0, 10)}`}
-                  />
-                )}
-                {selected.reference && (
-                  <Field
-                    label="Reference"
-                    value={`${selected.reference.firstName} ${selected.reference.lastName} (${selected.reference.relationship}) — ${selected.reference.email || ''} ${selected.reference.phone || ''}`}
-                  />
-                )}
-                {selected.emergencyContacts?.length > 0 && (
-                  <Field
-                    label="Emergency contacts"
-                    value={selected.emergencyContacts
-                      .map((c) => `${c.firstName} ${c.lastName} (${c.relationship})`)
-                      .join(' · ')}
-                  />
-                )}
-                {selected.documents?.length > 0 && (
-                  <Field
-                    label="Documents"
-                    value={selected.documents.map((d) => `${d.kind}: ${d.originalName}`).join(' · ')}
-                  />
-                )}
-              </Stack>
-
-              {tab === 'pending' && (
-                <TextField
-                  label="Feedback (required for reject)"
-                  multiline
-                  fullWidth
-                  minRows={3}
-                  value={feedback}
-                  onChange={(e) => setFeedback(e.target.value)}
-                  sx={{ mt: 3 }}
-                />
-              )}
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setSelected(null)}>Close</Button>
-              {tab === 'pending' && (
-                <>
-                  <Button
-                    color="error"
-                    onClick={() => review('reject')}
-                    disabled={reviewing}
-                  >
-                    Reject
-                  </Button>
-                  <Button
-                    variant="contained"
-                    onClick={() => review('approve')}
-                    disabled={reviewing}
-                  >
-                    Approve
-                  </Button>
-                </>
-              )}
-            </DialogActions>
-          </>
-        )}
-      </Dialog>
     </Box>
-  );
-}
-
-function Field({ label, value }) {
-  return (
-    <Stack direction="row" spacing={2}>
-      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 160 }}>
-        {label}
-      </Typography>
-      <Typography variant="body2" sx={{ flex: 1 }}>{value}</Typography>
-    </Stack>
   );
 }

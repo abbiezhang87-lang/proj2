@@ -13,6 +13,7 @@ import EmployeeProfilesPage from '../pages/hr/EmployeeProfilesPage';
 import HREmployeeProfilePage from '../pages/hr/HREmployeeProfilePage';
 import HRVisaStatusPage from '../pages/hr/HRVisaStatusPage';
 import HiringManagementPage from '../pages/hr/HiringManagementPage';
+import HRApplicationReviewPage from '../pages/hr/HRApplicationReviewPage';
 
 import ProtectedRoute from '../components/common/ProtectedRoute';
 
@@ -34,6 +35,7 @@ export default function AppRoutes() {
       <Route path="/hr/employees/:userId" element={<ProtectedRoute role="hr"><HREmployeeProfilePage /></ProtectedRoute>} />
       <Route path="/hr/visa" element={<ProtectedRoute role="hr"><HRVisaStatusPage /></ProtectedRoute>} />
       <Route path="/hr/hiring" element={<ProtectedRoute role="hr"><HiringManagementPage /></ProtectedRoute>} />
+      <Route path="/hr/applications/:applicationId" element={<ProtectedRoute role="hr"><HRApplicationReviewPage /></ProtectedRoute>} />
 
       {/* Catch-all */}
       <Route path="*" element={<Navigate to="/" replace />} />
