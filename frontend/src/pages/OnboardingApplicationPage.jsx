@@ -3,8 +3,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useForm, FormProvider } from 'react-hook-form';
 import {
-  Box, Paper, Typography, Stack, Button, Alert, Chip, Divider,
+  Box, Paper, Typography, Stack, Button, Alert, Chip, Divider, Avatar,
 } from '@mui/material';
+import PersonIcon from '@mui/icons-material/Person';
 
 import {
   fetchMyApplication, submitApplication, uploadDocument,
@@ -114,6 +115,10 @@ export default function OnboardingApplicationPage() {
     if (action.error) throw new Error(action.payload || 'Upload failed');
   };
 
+  // Watch the visa type so we can conditionally show an OPT Receipt uploader.
+  const visaType = methods.watch('workAuthorization.type');
+  const isOPT = visaType === 'F1';
+
   return (
     <Box sx={{ p: { xs: 2, sm: 4 }, maxWidth: 980, mx: 'auto' }}>
       <Paper sx={{ p: { xs: 2, sm: 4 }, borderRadius: 3 }} elevation={1}>
@@ -144,13 +149,23 @@ export default function OnboardingApplicationPage() {
           {/* Profile picture / documents — uploadable independently of the form */}
           <Stack spacing={2}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Documents</Typography>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Avatar
+                src={application?.profilePicture?._id
+                  ? `/api/onboarding/documents/${application.profilePicture._id}?inline=1`
+                  : undefined}
+                sx={{ width: 72, height: 72, bgcolor: '#f5e9d5' }}
+              >
+                <PersonIcon sx={{ color: '#8a6a2f', fontSize: 36 }} />
+              </Avatar>
               <DocumentUploader
                 label="Upload profile picture"
                 accept="image/*"
                 disabled={readOnly}
                 onUpload={(f) => handleUpload('profile_picture', f)}
               />
+            </Stack>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <DocumentUploader
                 label="Upload driver's license"
                 accept=".pdf,image/*"
@@ -163,14 +178,41 @@ export default function OnboardingApplicationPage() {
                 disabled={readOnly}
                 onUpload={(f) => handleUpload('work_authorization', f)}
               />
+              {isOPT && (
+                <DocumentUploader
+                  label="Upload OPT Receipt"
+                  accept=".pdf,image/*"
+                  disabled={readOnly}
+                  onUpload={(f) => handleUpload('opt_receipt', f)}
+                />
+              )}
             </Stack>
 
             {application?.documents?.length > 0 && (
-              <Stack spacing={0.5} sx={{ mt: 1 }}>
+              <Stack spacing={1} sx={{ mt: 1 }}>
                 {application.documents.map((d) => (
-                  <Typography key={d._id || d.id} variant="caption" color="text.secondary">
-                    • {d.kind}: {d.originalName}
-                  </Typography>
+                  <Stack key={d._id || d.id} direction="row" spacing={2} alignItems="center">
+                    <Typography variant="body2" sx={{ minWidth: 180, color: 'text.secondary' }}>
+                      {d.kind}
+                    </Typography>
+                    <Typography variant="body2" sx={{ flex: 1 }}>{d.originalName}</Typography>
+                    <Button
+                      size="small"
+                      component="a"
+                      href={`/api/onboarding/documents/${d._id}?inline=1`}
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      Preview
+                    </Button>
+                    <Button
+                      size="small"
+                      component="a"
+                      href={`/api/onboarding/documents/${d._id}`}
+                    >
+                      Download
+                    </Button>
+                  </Stack>
                 ))}
               </Stack>
             )}

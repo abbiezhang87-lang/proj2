@@ -17,6 +17,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const isAuth = useSelector(selectIsAuthenticated);
+  const user = useSelector((s) => s.auth.user);
   const status = useSelector(selectAuthStatus);
   const error = useSelector(selectAuthError);
 
@@ -24,13 +25,15 @@ export default function LoginPage() {
     defaultValues: { username: '', password: '' },
   });
 
-  // Redirect if already logged in.
+  // Per spec: employee → Personal Information page; HR → Home.
+  // PersonalInformationPage itself redirects to /onboarding if not approved.
   useEffect(() => {
-    if (isAuth) {
-      const dest = location.state?.from || '/';
+    if (isAuth && user) {
+      const fallback = user.role === 'hr' ? '/' : '/personal-info';
+      const dest = location.state?.from || fallback;
       navigate(dest, { replace: true });
     }
-  }, [isAuth, navigate, location.state]);
+  }, [isAuth, user, navigate, location.state]);
 
   // Clear stale error when user starts typing.
   useEffect(() => () => dispatch(clearError()), [dispatch]);

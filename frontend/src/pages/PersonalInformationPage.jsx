@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { useForm, FormProvider } from 'react-hook-form';
 import {
   Box, Paper, Stack, Typography, Button, Alert, Divider,
@@ -7,7 +8,9 @@ import {
 } from '@mui/material';
 
 import * as employeeApi from '../api/employeeApi';
-import { fetchMyApplication, selectApplication } from '../store/slices/onboardingSlice';
+import {
+  fetchMyApplication, selectApplication, selectOnboardingStatus,
+} from '../store/slices/onboardingSlice';
 
 import NameSection from '../components/forms/NameSection';
 import AddressSection from '../components/forms/AddressSection';
@@ -71,12 +74,21 @@ function pickPayload(values, fields) {
 
 export default function PersonalInformationPage() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const profile = useSelector(selectApplication);
+  const status = useSelector(selectOnboardingStatus);
   const [editing, setEditing] = useState(null);  // section.id currently editing
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(true);
+
+  // Per spec §3.b: not-yet-approved users belong on /onboarding.
+  useEffect(() => {
+    if (status && status !== 'approved') {
+      navigate('/onboarding', { replace: true });
+    }
+  }, [status, navigate]);
 
   // Pull from server (and re-pull after each save).
   const refresh = async () => {
