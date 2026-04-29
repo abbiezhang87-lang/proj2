@@ -15,10 +15,10 @@ app.use('/uploads', express.static('uploads'));
 
 // Routes — mount as features come online.
 app.use('/api/auth', require('./routes/authRoutes'));
-// app.use('/api/onboarding', require('./routes/onboardingRoutes'));
+app.use('/api/onboarding', require('./routes/onboardingRoutes'));
+app.use('/api/hr', require('./routes/hrRoutes'));
 // app.use('/api/employees', require('./routes/employeeRoutes'));
 // app.use('/api/visa', require('./routes/visaRoutes'));
-// app.use('/api/hr', require('./routes/hrRoutes'));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
