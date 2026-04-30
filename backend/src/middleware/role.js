@@ -1,8 +1,13 @@
-// Role gate — use after `auth`. Usage: router.use(requireRole('hr'))
-// TODO: check req.user.role === expected.
-
-module.exports = function requireRole(_expected) {
-  return (_req, res, _next) => {
-    res.status(501).json({ message: 'Not implemented: role middleware' });
+// Role gate. Use after `auth`:
+//   router.use(auth, requireRole('hr'))
+module.exports = function requireRole(expected) {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    if (req.user.role !== expected) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+    next();
   };
 };
