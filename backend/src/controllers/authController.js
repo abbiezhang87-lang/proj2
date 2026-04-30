@@ -35,7 +35,9 @@ exports.register = asyncHandler(async (req, res) => {
   if (!isEmail(email)) throw httpError(400, 'Invalid email format');
   if (password.length < 6) throw httpError(400, 'Password must be at least 6 characters');
 
-  const tokenDoc = await tokenService.validate(token);
+  // Trim — copy/paste from the email link sometimes drags in trailing whitespace
+  // or newlines, and the DB lookup is exact.
+  const tokenDoc = await tokenService.validate(String(token).trim());
   if (tokenDoc.email !== email.toLowerCase().trim()) {
     throw httpError(400, 'Email does not match invitation');
   }

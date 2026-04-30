@@ -18,7 +18,8 @@ export default function RegistrationPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const token = params.get('token') || '';
+  // Trim — copy/paste from the email link sometimes brings whitespace/newlines.
+  const token = (params.get('token') || '').trim();
 
   const isAuth = useSelector(selectIsAuthenticated);
   const status = useSelector(selectAuthStatus);

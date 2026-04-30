@@ -22,6 +22,21 @@ app.use('/api/hr', require('./routes/hrRoutes'));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
+// Friendly root — direct visits to http://localhost:3001 should not look broken.
+app.get('/', (_req, res) => {
+  res.type('html').send(`
+    <html><head><title>Employee Management API</title></head>
+    <body style="font-family: -apple-system, sans-serif; max-width: 540px; margin: 80px auto; color: #2d3033;">
+      <h2>Employee Management API</h2>
+      <p>This is the backend. The user interface lives at
+        <a href="http://localhost:3000">http://localhost:3000</a>.</p>
+      <ul>
+        <li><a href="/api/health">/api/health</a> — health check</li>
+        <li>/api/auth, /api/onboarding, /api/employees, /api/visa, /api/hr — JSON endpoints (need a JWT)</li>
+      </ul>
+    </body></html>`);
+});
+
 // 404 for unmatched API routes
 app.use('/api', (_req, res) => res.status(404).json({ message: 'Not found' }));
 

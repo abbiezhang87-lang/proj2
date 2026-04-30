@@ -98,11 +98,17 @@ export default function HiringManagementPage() {
 
             {tokenError && <Alert severity="error" onClose={() => setTokenError('')}>{tokenError}</Alert>}
             {lastLink && (
-              <Alert severity="success" onClose={() => setLastLink('')}>
-                Invitation sent. Direct link:{' '}
-                <Box component="span" sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>
-                  {lastLink}
-                </Box>
+              <Alert
+                severity="success"
+                onClose={() => setLastLink('')}
+                action={
+                  <Button color="inherit" size="small" onClick={() => copyLink(lastLink)}>
+                    Copy link
+                  </Button>
+                }
+              >
+                Invitation sent. Use the Copy button — selecting the link by hand
+                can pick up line breaks.
               </Alert>
             )}
 
