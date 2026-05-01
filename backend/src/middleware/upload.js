@@ -1,10 +1,17 @@
+const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const multer = require('multer');
 
 // Disk storage. Files land in /uploads with a randomised name to avoid clashes.
 const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, 'uploads/'),
+  destination: (_req, _file, cb) => {
+    const dir = 'uploads/';
+    // Defensive — server.js also creates this; this guard handles edge cases
+    // like running tests in a fresh cwd.
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
     const stem = crypto.randomBytes(8).toString('hex');
