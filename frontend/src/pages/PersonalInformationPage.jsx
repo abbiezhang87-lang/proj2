@@ -19,19 +19,23 @@ import EmploymentSection from '../components/forms/EmploymentSection';
 import EmergencyContactSection from '../components/forms/EmergencyContactSection';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
-// Map UI section → backend section param + which form fields it owns. The form
-// values still cover everything; we only PATCH the relevant slice on save.
+// Map UI section → backend section param + which form fields it owns. Section
+// grouping follows spec §5: "Name" bundles identity (email/SSN/DOB/gender),
+// "Contact Info" is just phones, etc.
 const SECTIONS = [
-  { id: 'name',      label: 'Name',              api: 'name',      Component: NameSection },
+  { id: 'name',      label: 'Name',              api: 'name',      Component: NameSection,
+    componentProps: { withIdentity: true } },
   { id: 'address',   label: 'Address',           api: 'address',   Component: AddressSection },
   { id: 'contact',   label: 'Contact info',      api: 'contact',   Component: ContactSection,
-    componentProps: { lockEmail: true } },
+    componentProps: { phonesOnly: true } },
   { id: 'employment', label: 'Employment',       api: 'employment', Component: EmploymentSection },
   { id: 'emergency', label: 'Emergency contact', api: 'emergency', Component: EmergencyContactSection },
 ];
 
 const SECTION_FIELDS = {
-  name: ['firstName', 'lastName', 'middleName', 'preferredName'],
+  // Name section now owns the identity fields per spec §5.b
+  name: ['firstName', 'lastName', 'middleName', 'preferredName',
+         'ssn', 'dob', 'gender'],
   address: ['address'],
   contact: ['cellPhone', 'workPhone'],
   employment: ['workAuthorization'],

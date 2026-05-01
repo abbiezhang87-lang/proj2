@@ -207,7 +207,24 @@ function InProgressTable({ rows, onReview, onNotify, busy }) {
       </TableHead>
       <TableBody>
         {rows.map((r, i) => {
-          // Branch: applications still in onboarding pipeline vs OPT step machine.
+          // Branch 1: registered employee with no onboarding application yet.
+          if (r.stage === 'no-application') {
+            return (
+              <TableRow key={`noapp-${r.userId}`} hover>
+                <TableCell sx={{ fontWeight: 500 }}>{r.fullName}</TableCell>
+                <TableCell>{r.workAuth.type}</TableCell>
+                <TableCell>—</TableCell>
+                <TableCell>{r.nextStep}</TableCell>
+                <TableCell align="right">
+                  <Button size="small" disabled={busy} onClick={() => onNotify(r.userId)}>
+                    Send notification
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          }
+
+          // Branch 2: applications still in onboarding pipeline.
           if (r.stage === 'application') {
             return (
               <TableRow key={`app-${r.applicationId}`} hover>

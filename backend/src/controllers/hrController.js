@@ -177,6 +177,25 @@ exports.getEmployeeProfile = asyncHandler(async (req, res) => {
 exports.listVisaInProgress = asyncHandler(async (_req, res) => {
   const out = [];
 
+  // Stage Z — employees who registered but haven't submitted onboarding yet.
+  // Spec §HR/4.a.i: "sent registration token: next step is to submit
+  // onboarding application".
+  const registeredNoApp = await User.find({
+    role: 'employee',
+    onboardingApplication: { $in: [null, undefined] },
+  });
+  for (const u of registeredNoApp) {
+    out.push({
+      stage: 'no-application',
+      userId: u._id,
+      fullName: u.username,
+      workAuth: { type: '—' },
+      nextStep: 'Submit onboarding application',
+      currentStepStatus: 'awaiting_employee',
+      currentStepDocument: null,
+    });
+  }
+
   // Stage A — applications still in onboarding pipeline.
   const earlyApps = await OnboardingApplication.find({
     status: { $in: ['pending', 'rejected'] },
@@ -299,29 +318,45 @@ exports.reviewVisaDocument = asyncHandler(async (req, res) => {
 });
 
 // POST /api/hr/visa/:userId/notify
-// Sends a "next step" reminder email to the employee.
+// Sends a "next step" reminder email. The "next step" depends on which stage
+// the employee is in (no application yet / application rejected / OPT step).
 exports.sendNextStepNotification = asyncHandler(async (req, res) => {
-  const visa = await VisaStatus.findOne({ user: req.params.userId }).populate('user');
-  if (!visa) throw httpError(404, 'Visa status not found');
+  const user = await User.findById(req.params.userId);
+  if (!user) throw httpError(404, 'User not found');
 
-  const next = visa.nextStep();
-  if (!next) throw httpError(400, 'All visa steps already approved');
+  let nextStepText;
+  let nextKey;
 
-  const messages = {
-    optReceipt: 'Please upload your OPT Receipt.',
-    optEad: 'Please upload your OPT EAD.',
-    i983: 'Please complete and upload your I-983 form.',
-    i20: 'Please send the I-983 to your school and upload the new I-20.',
-  };
+  // Stage A — registered but no onboarding application
+  if (!user.onboardingApplication) {
+    nextStepText = 'Please submit your onboarding application.';
+    nextKey = 'submit_onboarding';
+  } else {
+    const app = await OnboardingApplication.findById(user.onboardingApplication);
+    if (app?.status === 'rejected') {
+      nextStepText = 'Your onboarding application was rejected. Please address HR feedback and resubmit.';
+      nextKey = 'resubmit_onboarding';
+    } else {
+      const visa = await VisaStatus.findOne({ user: user._id });
+      if (!visa) throw httpError(400, 'No visa workflow for this employee');
+      const step = visa.nextStep();
+      if (!step) throw httpError(400, 'All visa steps already approved');
+      const messages = {
+        optReceipt: 'Please upload your OPT Receipt.',
+        optEad: 'Please upload your OPT EAD.',
+        i983: 'Please complete and upload your I-983 form.',
+        i20: 'Please send the I-983 to your school and upload the new I-20.',
+      };
+      nextStepText = messages[step];
+      nextKey = step;
+    }
+  }
 
   try {
-    await emailService.sendNextStepEmail({
-      to: visa.user.email,
-      nextStepText: messages[next],
-    });
+    await emailService.sendNextStepEmail({ to: user.email, nextStepText });
   } catch (err) {
     console.error('Email send failed:', err.message);
   }
 
-  res.json({ ok: true, nextStep: next });
+  res.json({ ok: true, nextStep: nextKey });
 });

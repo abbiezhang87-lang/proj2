@@ -195,14 +195,21 @@ export default function HiringManagementPage() {
                 {tokens.map((t) => {
                   const link = buildLink(t.token);
                   const expired = !t.used && new Date(t.expiresAt) < new Date();
+                  // Spec §HR/5.b.iii: status reflects whether the email has been
+                  // submitted in an onboarding application — not just whether
+                  // the token was consumed (account created).
+                  const submitted = Boolean(t.user?.onboardingApplication);
+                  const registered = t.used && !submitted;
                   return (
                     <TableRow key={t._id}>
                       <TableCell>{t.email}</TableCell>
                       <TableCell>{t.name || '—'}</TableCell>
                       <TableCell>{new Date(t.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>
-                        {t.used ? (
+                        {submitted ? (
                           <Chip label="Submitted" color="success" size="small" />
+                        ) : registered ? (
+                          <Chip label="Registered" color="info" size="small" />
                         ) : expired ? (
                           <Chip label="Expired" size="small" />
                         ) : (

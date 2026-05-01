@@ -39,10 +39,17 @@ async function consume(tokenDoc, userId) {
 }
 
 // HR-facing: list every invitation ever sent.
+// Spec §HR/5.b.iii wants the row's status to reflect whether the email has been
+// "submitted in an onboarding application" — so we chain-populate the user's
+// onboardingApplication so the FE can decide submitted vs registered-only.
 async function listHistory() {
   return RegistrationToken.find()
     .sort({ createdAt: -1 })
-    .populate('user', 'username email');
+    .populate({
+      path: 'user',
+      select: 'username email onboardingApplication',
+      populate: { path: 'onboardingApplication', select: 'status' },
+    });
 }
 
 module.exports = { generate, validate, consume, listHistory };

@@ -6,12 +6,21 @@ import {
 
 const PHONE_RE = /^\+?[\d\s\-().]{7,}$/;
 
-export default function ContactSection({ readOnly = false, lockEmail = true }) {
+// `phonesOnly`: spec §5.d says the Personal Info "Contact Info" section is just
+// cell + work phones. Onboarding still uses the full version (with email +
+// SSN + DOB + gender) since spec §3.c lumps those together.
+export default function ContactSection({
+  readOnly = false,
+  lockEmail = true,
+  phonesOnly = false,
+}) {
   const { register, formState: { errors } } = useFormContext();
 
   return (
     <Stack spacing={2}>
-      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Contact & identity</Typography>
+      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+        {phonesOnly ? 'Contact info' : 'Contact & identity'}
+      </Typography>
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         <TextField
@@ -31,52 +40,56 @@ export default function ContactSection({ readOnly = false, lockEmail = true }) {
           disabled={readOnly}
           {...register('workPhone')}
         />
-        <TextField
-          label="Email"
-          fullWidth
-          disabled={readOnly || lockEmail}
-          {...register('email')}
-        />
+        {!phonesOnly && (
+          <TextField
+            label="Email"
+            fullWidth
+            disabled={readOnly || lockEmail}
+            {...register('email')}
+          />
+        )}
       </Stack>
 
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <TextField
-          label="SSN *"
-          fullWidth
-          disabled={readOnly}
-          error={Boolean(errors.ssn)}
-          helperText={errors.ssn?.message}
-          {...register('ssn', {
-            required: 'Required',
-            pattern: { value: /^\d{3}-?\d{2}-?\d{4}$/, message: '###-##-####' },
-          })}
-        />
-        <TextField
-          label="Date of birth *"
-          type="date"
-          fullWidth
-          disabled={readOnly}
-          InputLabelProps={{ shrink: true }}
-          error={Boolean(errors.dob)}
-          helperText={errors.dob?.message}
-          {...register('dob', { required: 'Required' })}
-        />
-        <TextField
-          select
-          label="Gender *"
-          fullWidth
-          disabled={readOnly}
-          defaultValue=""
-          error={Boolean(errors.gender)}
-          helperText={errors.gender?.message}
-          {...register('gender', { required: 'Required' })}
-        >
-          <MenuItem value="">—</MenuItem>
-          <MenuItem value="male">Male</MenuItem>
-          <MenuItem value="female">Female</MenuItem>
-          <MenuItem value="no_answer">Prefer not to say</MenuItem>
-        </TextField>
-      </Stack>
+      {!phonesOnly && (
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <TextField
+            label="SSN *"
+            fullWidth
+            disabled={readOnly}
+            error={Boolean(errors.ssn)}
+            helperText={errors.ssn?.message}
+            {...register('ssn', {
+              required: 'Required',
+              pattern: { value: /^\d{3}-?\d{2}-?\d{4}$/, message: '###-##-####' },
+            })}
+          />
+          <TextField
+            label="Date of birth *"
+            type="date"
+            fullWidth
+            disabled={readOnly}
+            InputLabelProps={{ shrink: true }}
+            error={Boolean(errors.dob)}
+            helperText={errors.dob?.message}
+            {...register('dob', { required: 'Required' })}
+          />
+          <TextField
+            select
+            label="Gender *"
+            fullWidth
+            disabled={readOnly}
+            defaultValue=""
+            error={Boolean(errors.gender)}
+            helperText={errors.gender?.message}
+            {...register('gender', { required: 'Required' })}
+          >
+            <MenuItem value="">—</MenuItem>
+            <MenuItem value="male">Male</MenuItem>
+            <MenuItem value="female">Female</MenuItem>
+            <MenuItem value="no_answer">Prefer not to say</MenuItem>
+          </TextField>
+        </Stack>
+      )}
     </Stack>
   );
 }

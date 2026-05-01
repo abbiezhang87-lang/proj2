@@ -8,8 +8,11 @@ const { httpError } = require('../utils/validators');
 
 // Whitelisted fields per Personal Information section. Employees can only
 // edit these post-approval; status / feedback / user are off-limits.
+// Section layout follows spec §5: the "Name" section owns name fields plus
+// the identity fields (SSN / DOB / gender), email is read-only.
 const SECTION_FIELDS = {
-  name: ['firstName', 'lastName', 'middleName', 'preferredName'],
+  name: ['firstName', 'lastName', 'middleName', 'preferredName',
+         'ssn', 'dob', 'gender'],
   address: ['address'],
   contact: ['cellPhone', 'workPhone'],
   employment: ['workAuthorization'],
