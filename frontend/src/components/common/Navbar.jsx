@@ -53,7 +53,7 @@ export default function Navbar() {
           variant="h6"
           sx={{ fontWeight: 600, color: 'primary.main', mr: 2 }}
         >
-          Greenhouse HR
+          Chuwa HR
         </Typography>
 
         <Box sx={{ display: 'flex', gap: 1, flexGrow: 1 }}>
