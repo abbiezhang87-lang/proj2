@@ -23,6 +23,32 @@ function pickFields(body) {
   return out;
 }
 
+// Normalises citizenship-vs-visa data so the wrong half doesn't trip Mongoose
+// enum validation. The form sends both halves filled with defaults regardless
+// of which one the user picked, so we strip the irrelevant half here.
+function cleanCitizenship(fields) {
+  if (fields.isCitizenOrPR === true) {
+    // Citizen / PR — must pick residency type, drop everything visa-related.
+    if (!fields.residencyType) {
+      throw httpError(400, 'Residency type is required (Green Card / Citizen)');
+    }
+    fields.workAuthorization = undefined;
+  } else if (fields.isCitizenOrPR === false) {
+    // Visa holder — drop residency.
+    fields.residencyType = undefined;
+    // Visa subdoc: must have a type; normalise empty strings to undefined so
+    // Mongoose date/enum validators don't choke on them.
+    const wa = fields.workAuthorization;
+    if (!wa || !wa.type) {
+      throw httpError(400, 'Visa type is required when not a citizen / PR');
+    }
+    if (!wa.otherTitle) wa.otherTitle = undefined;
+    if (!wa.startDate) wa.startDate = undefined;
+    if (!wa.endDate) wa.endDate = undefined;
+  }
+  return fields;
+}
+
 // GET /api/onboarding/me
 exports.getMyApplication = asyncHandler(async (req, res) => {
   const app = await OnboardingApplication.findOne({ user: req.user._id })
@@ -34,7 +60,7 @@ exports.getMyApplication = asyncHandler(async (req, res) => {
 // POST /api/onboarding/submit
 // First-time submission OR resubmission after rejection.
 exports.submitApplication = asyncHandler(async (req, res) => {
-  const fields = pickFields(req.body);
+  const fields = cleanCitizenship(pickFields(req.body));
 
   // Lock fields: user is always req.user, email is pinned to the User's email,
   // status returns to 'pending' on every (re)submission.
@@ -56,6 +82,10 @@ exports.submitApplication = asyncHandler(async (req, res) => {
   let app;
   if (existing) {
     Object.assign(existing, update);
+    // If switching halves on resubmit, explicitly tell Mongoose to drop the
+    // opposite half — otherwise old subdoc/values may linger.
+    if (update.workAuthorization === undefined) existing.workAuthorization = undefined;
+    if (update.residencyType === undefined) existing.residencyType = undefined;
     app = await existing.save();
   } else {
     app = await OnboardingApplication.create(update);

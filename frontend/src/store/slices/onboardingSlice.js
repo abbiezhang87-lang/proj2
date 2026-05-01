@@ -20,7 +20,13 @@ export const submitApplication = createAsyncThunk(
       const { data } = await onboardingApi.submitApplication(payload);
       return data.application;
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || 'Submission failed');
+      // Surface field-level validation details if the backend sent them.
+      const data = err.response?.data || {};
+      const message = data.message || 'Submission failed';
+      const fieldsPart = data.fields
+        ? ': ' + Object.entries(data.fields).map(([k, v]) => `${k} — ${v}`).join('; ')
+        : '';
+      return rejectWithValue(message + fieldsPart);
     }
   }
 );
