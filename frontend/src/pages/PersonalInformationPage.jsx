@@ -8,6 +8,7 @@ import {
 } from '@mui/material';
 
 import * as employeeApi from '../api/employeeApi';
+import { PreviewButton, DownloadButton } from '../components/documents/DocumentActions';
 import {
   fetchMyApplication, selectApplication, selectOnboardingStatus,
 } from '../store/slices/onboardingSlice';
@@ -206,12 +207,8 @@ export default function PersonalInformationPage() {
                       <Stack key={d._id} direction="row" spacing={2} alignItems="center">
                         <Typography variant="body2" sx={{ minWidth: 180 }}>{d.kind}</Typography>
                         <Typography variant="body2" sx={{ flex: 1 }}>{d.originalName}</Typography>
-                        <Button size="small" component="a" href={`/api/employees/me/documents/${d._id}?inline=1`} target="_blank">
-                          Preview
-                        </Button>
-                        <Button size="small" component="a" href={`/api/employees/me/documents/${d._id}`}>
-                          Download
-                        </Button>
+                        <PreviewButton path={`/employees/me/documents/${d._id}`} />
+                        <DownloadButton path={`/employees/me/documents/${d._id}`} filename={d.originalName} />
                       </Stack>
                     ))}
                   </Stack>

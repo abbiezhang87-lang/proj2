@@ -7,7 +7,20 @@ import {
 
 import { Link as RouterLink } from 'react-router-dom';
 import * as hrApi from '../../api/hrApi';
+import api from '../../api/axiosInstance';
+import { PreviewButton, DownloadButton } from '../../components/documents/DocumentActions';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+
+// Helper for the "All" tab chips that link straight to docs.
+async function openDocInline(docId) {
+  try {
+    const res = await api.get(`/onboarding/documents/${docId}`, { responseType: 'blob' });
+    const blob = new Blob([res.data], { type: res.headers['content-type'] });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  } catch (_e) { /* no-op */ }
+}
 
 const STEP_LABELS = {
   optReceipt: 'OPT Receipt',
@@ -143,14 +156,11 @@ export default function HRVisaStatusPage() {
             <DialogContent dividers>
               {reviewing.documentId ? (
                 <Stack spacing={2}>
-                  <Button
-                    component="a"
-                    href={`/api/onboarding/documents/${reviewing.documentId}?inline=1`}
-                    target="_blank"
+                  <PreviewButton
+                    path={`/onboarding/documents/${reviewing.documentId}`}
                     variant="outlined"
-                  >
-                    Preview document
-                  </Button>
+                    size="medium"
+                  />
                   <TextField
                     label="Feedback (required for reject)"
                     multiline
@@ -312,9 +322,7 @@ function AllTable({ rows }) {
                   <Chip
                     key={d.step}
                     label={STEP_LABELS[d.step]}
-                    component="a"
-                    href={`/api/onboarding/documents/${d.documentId}?inline=1`}
-                    target="_blank"
+                    onClick={() => openDocInline(d.documentId)}
                     clickable
                     size="small"
                     color="success"

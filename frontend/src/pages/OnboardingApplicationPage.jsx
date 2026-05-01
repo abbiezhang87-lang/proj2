@@ -22,6 +22,9 @@ import EmploymentSection from '../components/forms/EmploymentSection';
 import ReferenceSection from '../components/forms/ReferenceSection';
 import EmergencyContactSection from '../components/forms/EmergencyContactSection';
 import DocumentUploader from '../components/documents/DocumentUploader';
+import {
+  PreviewButton, DownloadButton, useAuthBlobUrl,
+} from '../components/documents/DocumentActions';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const EMPTY_DEFAULTS = {
@@ -156,9 +159,6 @@ export default function OnboardingApplicationPage() {
               label="Profile picture"
               accept="image/*"
               avatar
-              avatarSrc={application?.profilePicture?._id
-                ? `/api/onboarding/documents/${application.profilePicture._id}?inline=1`
-                : undefined}
               uploaded={application?.profilePicture}
               readOnly={readOnly}
               onUpload={handleUpload}
@@ -225,8 +225,14 @@ export default function OnboardingApplicationPage() {
 
 // One uniform row per document kind: thumbnail / icon · label · status · upload + preview/download.
 function DocumentRow({
-  kind, label, accept, avatar = false, avatarSrc, uploaded, readOnly, onUpload,
+  kind, label, accept, avatar = false, uploaded, readOnly, onUpload,
 }) {
+  // Profile picture renders as an actual <img> via blob URL — img tags don't
+  // send the JWT on their own, so we fetch with axios and stuff the result in.
+  const profileBlobUrl = useAuthBlobUrl(
+    avatar && uploaded?._id ? `/onboarding/documents/${uploaded._id}` : null
+  );
+
   return (
     <Stack
       direction="row"
@@ -242,7 +248,7 @@ function DocumentRow({
     >
       {avatar ? (
         <Avatar
-          src={avatarSrc}
+          src={profileBlobUrl || undefined}
           sx={{ width: 56, height: 56, bgcolor: '#f5e9d5' }}
         >
           <PersonIcon sx={{ color: '#8a6a2f', fontSize: 28 }} />
@@ -267,22 +273,11 @@ function DocumentRow({
 
       {uploaded?._id && (
         <Stack direction="row" spacing={0.5}>
-          <Button
-            size="small"
-            component="a"
-            href={`/api/onboarding/documents/${uploaded._id}?inline=1`}
-            target="_blank"
-            rel="noopener"
-          >
-            Preview
-          </Button>
-          <Button
-            size="small"
-            component="a"
-            href={`/api/onboarding/documents/${uploaded._id}`}
-          >
-            Download
-          </Button>
+          <PreviewButton path={`/onboarding/documents/${uploaded._id}`} />
+          <DownloadButton
+            path={`/onboarding/documents/${uploaded._id}`}
+            filename={uploaded.originalName}
+          />
         </Stack>
       )}
 
