@@ -6,6 +6,7 @@ import {
   Box, Paper, Typography, Stack, Button, Alert, Chip, Divider, Avatar,
 } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 
 import {
   fetchMyApplication, submitApplication, uploadDocument,
@@ -146,75 +147,47 @@ export default function OnboardingApplicationPage() {
 
           {error && <Alert severity="error" onClose={() => dispatch(clearError())}>{error}</Alert>}
 
-          {/* Profile picture / documents — uploadable independently of the form */}
-          <Stack spacing={2}>
+          {/* Documents — uniform row-per-file layout */}
+          <Stack spacing={1.5}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Documents</Typography>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Avatar
-                src={application?.profilePicture?._id
-                  ? `/api/onboarding/documents/${application.profilePicture._id}?inline=1`
-                  : undefined}
-                sx={{ width: 72, height: 72, bgcolor: '#f5e9d5' }}
-              >
-                <PersonIcon sx={{ color: '#8a6a2f', fontSize: 36 }} />
-              </Avatar>
-              <DocumentUploader
-                label="Upload profile picture"
-                accept="image/*"
-                disabled={readOnly}
-                onUpload={(f) => handleUpload('profile_picture', f)}
-              />
-            </Stack>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <DocumentUploader
-                label="Upload driver's license"
-                accept=".pdf,image/*"
-                disabled={readOnly}
-                onUpload={(f) => handleUpload('drivers_license', f)}
-              />
-              <DocumentUploader
-                label="Upload work authorization"
-                accept=".pdf,image/*"
-                disabled={readOnly}
-                onUpload={(f) => handleUpload('work_authorization', f)}
-              />
-              {isOPT && (
-                <DocumentUploader
-                  label="Upload OPT Receipt"
-                  accept=".pdf,image/*"
-                  disabled={readOnly}
-                  onUpload={(f) => handleUpload('opt_receipt', f)}
-                />
-              )}
-            </Stack>
 
-            {application?.documents?.length > 0 && (
-              <Stack spacing={1} sx={{ mt: 1 }}>
-                {application.documents.map((d) => (
-                  <Stack key={d._id || d.id} direction="row" spacing={2} alignItems="center">
-                    <Typography variant="body2" sx={{ minWidth: 180, color: 'text.secondary' }}>
-                      {d.kind}
-                    </Typography>
-                    <Typography variant="body2" sx={{ flex: 1 }}>{d.originalName}</Typography>
-                    <Button
-                      size="small"
-                      component="a"
-                      href={`/api/onboarding/documents/${d._id}?inline=1`}
-                      target="_blank"
-                      rel="noopener"
-                    >
-                      Preview
-                    </Button>
-                    <Button
-                      size="small"
-                      component="a"
-                      href={`/api/onboarding/documents/${d._id}`}
-                    >
-                      Download
-                    </Button>
-                  </Stack>
-                ))}
-              </Stack>
+            <DocumentRow
+              kind="profile_picture"
+              label="Profile picture"
+              accept="image/*"
+              avatar
+              avatarSrc={application?.profilePicture?._id
+                ? `/api/onboarding/documents/${application.profilePicture._id}?inline=1`
+                : undefined}
+              uploaded={application?.profilePicture}
+              readOnly={readOnly}
+              onUpload={handleUpload}
+            />
+            <DocumentRow
+              kind="drivers_license"
+              label="Driver's license"
+              accept=".pdf,image/*"
+              uploaded={(application?.documents || []).find((d) => d.kind === 'drivers_license')}
+              readOnly={readOnly}
+              onUpload={handleUpload}
+            />
+            <DocumentRow
+              kind="work_authorization"
+              label="Work authorization"
+              accept=".pdf,image/*"
+              uploaded={(application?.documents || []).find((d) => d.kind === 'work_authorization')}
+              readOnly={readOnly}
+              onUpload={handleUpload}
+            />
+            {isOPT && (
+              <DocumentRow
+                kind="opt_receipt"
+                label="OPT Receipt"
+                accept=".pdf,image/*"
+                uploaded={(application?.documents || []).find((d) => d.kind === 'opt_receipt')}
+                readOnly={readOnly}
+                onUpload={handleUpload}
+              />
             )}
           </Stack>
 
@@ -247,5 +220,78 @@ export default function OnboardingApplicationPage() {
         </Stack>
       </Paper>
     </Box>
+  );
+}
+
+// One uniform row per document kind: thumbnail / icon · label · status · upload + preview/download.
+function DocumentRow({
+  kind, label, accept, avatar = false, avatarSrc, uploaded, readOnly, onUpload,
+}) {
+  return (
+    <Stack
+      direction="row"
+      alignItems="center"
+      spacing={2}
+      sx={{
+        p: 1.5,
+        bgcolor: '#faf8f4',
+        border: '1px solid',
+        borderColor: 'divider',
+        borderRadius: 2,
+      }}
+    >
+      {avatar ? (
+        <Avatar
+          src={avatarSrc}
+          sx={{ width: 56, height: 56, bgcolor: '#f5e9d5' }}
+        >
+          <PersonIcon sx={{ color: '#8a6a2f', fontSize: 28 }} />
+        </Avatar>
+      ) : (
+        <Avatar sx={{ width: 56, height: 56, bgcolor: '#eef0eb' }}>
+          <InsertDriveFileIcon sx={{ color: '#6b8e7f' }} />
+        </Avatar>
+      )}
+
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>{label}</Typography>
+        <Typography
+          variant="caption"
+          color={uploaded ? 'text.secondary' : 'text.disabled'}
+          noWrap
+          sx={{ display: 'block' }}
+        >
+          {uploaded ? uploaded.originalName : 'Not uploaded'}
+        </Typography>
+      </Box>
+
+      {uploaded?._id && (
+        <Stack direction="row" spacing={0.5}>
+          <Button
+            size="small"
+            component="a"
+            href={`/api/onboarding/documents/${uploaded._id}?inline=1`}
+            target="_blank"
+            rel="noopener"
+          >
+            Preview
+          </Button>
+          <Button
+            size="small"
+            component="a"
+            href={`/api/onboarding/documents/${uploaded._id}`}
+          >
+            Download
+          </Button>
+        </Stack>
+      )}
+
+      <DocumentUploader
+        label={uploaded ? 'Replace' : 'Upload'}
+        accept={accept}
+        disabled={readOnly}
+        onUpload={(f) => onUpload(kind, f)}
+      />
+    </Stack>
   );
 }
