@@ -34,23 +34,19 @@ proj2/
 │       ├── app.js
 │       └── server.js
 ├── frontend/                React SPA (CRA, port 3000)
-│   └── src/
-│       ├── api/             axios instance + per-domain API modules
-│       ├── components/
-│       │   ├── common/      Navbar · ProtectedRoute · LoadingSpinner
-│       │   ├── forms/       6 reusable RHF section components
-│       │   └── documents/   Uploader · Preview
-│       ├── pages/           login · register · onboarding · personal info · visa
-│       │   └── hr/          hiring · employee profiles · visa review
-│       ├── store/slices/    auth · onboarding · employee · visa
-│       ├── routes/          AppRoutes with ProtectedRoute guards
-│       ├── App.jsx · index.js
-│       └── utils/constants.js
-└── doc/
-    ├── HOW_TO_TEST.docx     Beginner-friendly testing walkthrough
-    ├── SETUP.docx           Quickstart / setup guide
-    ├── TESTING.docx         Reference test scenarios
-    └── Project-2-Slides.pptx  Demo presentation deck
+    └── src/
+        ├── api/             axios instance + per-domain API modules
+        ├── components/
+        │   ├── common/      Navbar · ProtectedRoute · LoadingSpinner
+        │   ├── forms/       6 reusable RHF section components
+        │   └── documents/   Uploader · Preview
+        ├── pages/           login · register · onboarding · personal info · visa
+        │   └── hr/          hiring · employee profiles · visa review
+        ├── store/slices/    auth · onboarding · employee · visa
+        ├── routes/          AppRoutes with ProtectedRoute guards
+        ├── App.jsx · index.js
+        └── utils/constants.js
+
 ```
 
 ## Local setup
@@ -77,8 +73,6 @@ npm start                     # http://localhost:3000
 > MongoDB can be local (`brew install mongodb-community` + `brew services
 > start mongodb-community`) or a free MongoDB Atlas cluster — the backend
 > works the same way as long as `MONGO_URI` is set.
-
-For the full step-by-step demo flow + screenshots, see **doc/HOW_TO_TEST.docx**.
 
 ## Feature checklist (Project-2 spec)
 
@@ -111,7 +105,6 @@ For the full step-by-step demo flow + screenshots, see **doc/HOW_TO_TEST.docx**.
 ## Deferred (with planned approach)
 
 - **TypeScript** — spec marks optional. Migrate incrementally: rename `.jsx` → `.tsx`, add types per file.
-- **Production SMTP** — code already calls nodemailer; set `SMTP_HOST/USER/PASS` in `backend/.env` (Gmail App Password or SendGrid).
 - **Token revocation / resend** — currently rely on 3-hour expiry. Approach: `DELETE /api/hr/tokens/:id` + a Resend button.
 
 ## Default credentials
