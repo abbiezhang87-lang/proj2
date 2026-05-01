@@ -9,6 +9,7 @@ import {
   selectVisaStatus, selectVisaNextStep, selectVisaLoading, selectVisaError,
 } from '../store/slices/visaSlice';
 import DocumentUploader from '../components/documents/DocumentUploader';
+import { PreviewButton, DownloadButton } from '../components/documents/DocumentActions';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const STEPS = [
@@ -177,12 +178,11 @@ export default function VisaStatusManagementPage() {
                   )}
                   {step.document?._id && (
                     <Stack direction="row" spacing={1}>
-                      <Button size="small" component="a" href={`/api/visa/me/documents/${step.document._id}?inline=1`} target="_blank">
-                        Preview
-                      </Button>
-                      <Button size="small" component="a" href={`/api/visa/me/documents/${step.document._id}`}>
-                        Download
-                      </Button>
+                      <PreviewButton path={`/visa/me/documents/${step.document._id}`} />
+                      <DownloadButton
+                        path={`/visa/me/documents/${step.document._id}`}
+                        filename={step.document.originalName}
+                      />
                     </Stack>
                   )}
                 </Stack>

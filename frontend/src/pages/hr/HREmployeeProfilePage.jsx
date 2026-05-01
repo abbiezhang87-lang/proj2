@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 
 import * as hrApi from '../../api/hrApi';
+import { PreviewButton, DownloadButton } from '../../components/documents/DocumentActions';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 // HR-only full profile view. Linked from EmployeeProfilesPage's name column —
@@ -113,7 +114,14 @@ export default function HREmployeeProfilePage() {
           {app.documents?.length > 0 && (
             <Section title="Documents">
               {app.documents.map((d) => (
-                <Field key={d._id} label={d.kind} value={d.originalName} />
+                <Stack key={d._id} direction="row" spacing={2} alignItems="center">
+                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 160 }}>
+                    {d.kind}
+                  </Typography>
+                  <Typography variant="body2" sx={{ flex: 1 }}>{d.originalName}</Typography>
+                  <PreviewButton path={`/onboarding/documents/${d._id}`} />
+                  <DownloadButton path={`/onboarding/documents/${d._id}`} filename={d.originalName} />
+                </Stack>
               ))}
             </Section>
           )}

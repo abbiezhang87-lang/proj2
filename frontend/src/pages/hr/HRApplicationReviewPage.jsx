@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 
 import * as hrApi from '../../api/hrApi';
+import { PreviewButton, DownloadButton } from '../../components/documents/DocumentActions';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 // Full-page application viewer — opened in a new tab from Hiring Management.
@@ -157,12 +158,8 @@ export default function HRApplicationReviewPage() {
                     {d.kind}
                   </Typography>
                   <Typography variant="body2" sx={{ flex: 1 }}>{d.originalName}</Typography>
-                  <Button size="small" component="a" href={`/api/onboarding/documents/${d._id}?inline=1`} target="_blank">
-                    Preview
-                  </Button>
-                  <Button size="small" component="a" href={`/api/onboarding/documents/${d._id}`}>
-                    Download
-                  </Button>
+                  <PreviewButton path={`/onboarding/documents/${d._id}`} />
+                  <DownloadButton path={`/onboarding/documents/${d._id}`} filename={d.originalName} />
                 </Stack>
               ))}
             </Section>
