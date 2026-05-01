@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "React + Redux Toolkit + MUI frontend for the Employee Management portal.",
+  "proxy": "http://localhost:3001",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",

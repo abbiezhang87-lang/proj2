@@ -1,14 +1,22 @@
 // Entry point — loads env, connects to MongoDB, starts the HTTP server.
-// TODO: implement actual startup logic once config/db and app are filled in.
-
 require('dotenv').config();
+
+const fs = require('fs');
+const path = require('path');
 const app = require('./app');
 const connectDB = require('./config/db');
 
 const PORT = process.env.PORT || 3001;
 
+// Ensure the uploads directory exists before multer needs it.
+const uploadsDir = path.resolve('uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log(`Created uploads directory at ${uploadsDir}`);
+}
+
 async function start() {
-  // TODO: await connectDB();
+  await connectDB();
   app.listen(PORT, () => {
     console.log(`Server listening on http://localhost:${PORT}`);
   });
