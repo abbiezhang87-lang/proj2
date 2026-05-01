@@ -97,7 +97,7 @@ export default function OnboardingApplicationPage() {
   // Reset form whenever application data changes (after fetch / submit).
   useEffect(() => {
     methods.reset(toFormValues(application, user?.email));
-  }, [application, user?.email]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [application, user?.email]);  // eslint-disable-line
 
   // Approved → bounce to home.
   useEffect(() => {

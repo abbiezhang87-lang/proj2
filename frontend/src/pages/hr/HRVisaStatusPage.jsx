@@ -5,6 +5,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
 } from '@mui/material';
 
+import { Link as RouterLink } from 'react-router-dom';
 import * as hrApi from '../../api/hrApi';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
@@ -205,11 +206,34 @@ function InProgressTable({ rows, onReview, onNotify, busy }) {
         </TableRow>
       </TableHead>
       <TableBody>
-        {rows.map((r) => {
+        {rows.map((r, i) => {
+          // Branch: applications still in onboarding pipeline vs OPT step machine.
+          if (r.stage === 'application') {
+            return (
+              <TableRow key={`app-${r.applicationId}`} hover>
+                <TableCell sx={{ fontWeight: 500 }}>{r.fullName}</TableCell>
+                <TableCell>{r.workAuth.type}</TableCell>
+                <TableCell>—</TableCell>
+                <TableCell>{r.nextStep}</TableCell>
+                <TableCell align="right">
+                  <Button
+                    size="small"
+                    component={RouterLink}
+                    to={`/hr/applications/${r.applicationId}`}
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Open application ↗
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          }
+
           const stepLabel = STEP_LABELS[r.nextStep] || r.nextStep;
           const waitingForHR = r.currentStepStatus === 'pending';
           return (
-            <TableRow key={r.userId} hover>
+            <TableRow key={r.userId || `row-${i}`} hover>
               <TableCell sx={{ fontWeight: 500 }}>{r.fullName}</TableCell>
               <TableCell>
                 {r.workAuth.type}

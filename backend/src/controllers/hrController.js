@@ -169,18 +169,41 @@ exports.getEmployeeProfile = asyncHandler(async (req, res) => {
 // --- Visa Status Management ---
 
 // GET /api/hr/visa/in-progress
-// Lists OPT employees with at least one un-approved step.
+// Spec §HR/4.a says this lists every employee who hasn't finished all OPT
+// docs, with their next step. We surface earlier stages too:
+//   - onboarding pending  → HR needs to review the application
+//   - onboarding rejected → employee needs to resubmit
+//   - visa step           → either HR or employee depending on step status
 exports.listVisaInProgress = asyncHandler(async (_req, res) => {
-  const visas = await VisaStatus.find()
-    .populate({
-      path: 'user',
-      select: 'username email',
-    });
-
   const out = [];
+
+  // Stage A — applications still in onboarding pipeline.
+  const earlyApps = await OnboardingApplication.find({
+    status: { $in: ['pending', 'rejected'] },
+  }).populate('user', 'username email');
+
+  for (const app of earlyApps) {
+    out.push({
+      stage: 'application',
+      userId: app.user?._id,
+      applicationId: app._id,
+      fullName: [app.firstName, app.middleName, app.lastName]
+        .filter(Boolean).join(' ') || app.user?.email || '(unknown)',
+      workAuth: { type: app.workAuthorization?.type || '—' },
+      nextStep:
+        app.status === 'pending'
+          ? 'HR review onboarding application'
+          : 'Employee resubmits onboarding',
+      currentStepStatus: app.status,
+      currentStepDocument: null,
+    });
+  }
+
+  // Stage B — VisaStatus already created; OPT step machine in progress.
+  const visas = await VisaStatus.find().populate('user', 'username email');
   for (const v of visas) {
     const next = v.nextStep();
-    if (!next) continue; // fully approved — skip
+    if (!next) continue; // all four steps approved — skip
 
     const app = await OnboardingApplication.findOne({ user: v.user._id });
     if (!app) continue;
@@ -191,6 +214,7 @@ exports.listVisaInProgress = asyncHandler(async (_req, res) => {
       : null;
 
     out.push({
+      stage: 'visa',
       userId: v.user._id,
       visaStatusId: v._id,
       fullName: [app.firstName, app.middleName, app.lastName].filter(Boolean).join(' '),

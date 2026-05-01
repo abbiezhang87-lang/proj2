@@ -4,9 +4,10 @@ import { Link as RouterLink } from 'react-router-dom';
 import {
   Box, Paper, Typography, Stack, Button, Alert, TextField,
   Table, TableHead, TableBody, TableRow, TableCell, Chip, IconButton, Tooltip,
-  Tabs, Tab,
+  Tabs, Tab, Snackbar,
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 import * as hrApi from '../../api/hrApi';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -27,6 +28,9 @@ export default function HiringManagementPage() {
   const [totals, setTotals] = useState({ pending: 0, rejected: 0, approved: 0 });
   const [appsLoading, setAppsLoading] = useState(true);
   const [appsError, setAppsError] = useState('');
+
+  // --- copy feedback ---
+  const [snack, setSnack] = useState({ open: false, msg: '', severity: 'success' });
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     defaultValues: { email: '', name: '' },
@@ -77,7 +81,27 @@ export default function HiringManagementPage() {
   };
 
   const buildLink = (token) => `${window.location.origin}/register?token=${token}`;
-  const copyLink = (link) => navigator.clipboard?.writeText(link);
+
+  const copyLink = async (link) => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(link);
+      } else {
+        // Fallback for non-https / older browsers
+        const ta = document.createElement('textarea');
+        ta.value = link;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      setSnack({ open: true, msg: 'Link copied to clipboard', severity: 'success' });
+    } catch (_e) {
+      setSnack({ open: true, msg: 'Copy failed — please copy manually', severity: 'error' });
+    }
+  };
 
   return (
     <Box sx={{ p: { xs: 2, sm: 4 }, maxWidth: 1100, mx: 'auto' }}>
@@ -186,11 +210,24 @@ export default function HiringManagementPage() {
                         )}
                       </TableCell>
                       <TableCell align="right">
-                        <Tooltip title="Copy link">
-                          <IconButton size="small" onClick={() => copyLink(link)}>
-                            <ContentCopyIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                        <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                          <Tooltip title={link}>
+                            <IconButton
+                              size="small"
+                              component="a"
+                              href={link}
+                              target="_blank"
+                              rel="noopener"
+                            >
+                              <OpenInNewIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Copy link">
+                            <IconButton size="small" onClick={() => copyLink(link)}>
+                              <ContentCopyIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Stack>
                       </TableCell>
                     </TableRow>
                   );
@@ -257,6 +294,21 @@ export default function HiringManagementPage() {
           )}
         </Paper>
       </Stack>
+
+      <Snackbar
+        open={snack.open}
+        autoHideDuration={2000}
+        onClose={() => setSnack({ ...snack, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          severity={snack.severity}
+          variant="filled"
+          onClose={() => setSnack({ ...snack, open: false })}
+        >
+          {snack.msg}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

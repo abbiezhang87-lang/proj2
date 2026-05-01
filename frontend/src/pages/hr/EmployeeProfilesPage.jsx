@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box, Paper, Typography, Stack, TextField, Alert,
-  Table, TableHead, TableBody, TableRow, TableCell, Link,
+  Table, TableHead, TableBody, TableRow, TableCell, Link, TablePagination,
 } from '@mui/material';
 
 import * as hrApi from '../../api/hrApi';
@@ -11,13 +11,19 @@ export default function EmployeeProfilesPage() {
   const [search, setSearch] = useState('');
   const [employees, setEmployees] = useState([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);          // MUI is 0-based; backend is 1-based
+  const [limit, setLimit] = useState(10);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const fetchEmployees = useCallback(async (q) => {
+  const fetchEmployees = useCallback(async (q, p, l) => {
     setLoading(true);
     try {
-      const { data } = await hrApi.listEmployees({ search: q });
+      const { data } = await hrApi.listEmployees({
+        search: q,
+        page: p + 1,
+        limit: l,
+      });
       setEmployees(data.employees || []);
       setTotal(data.total || 0);
     } catch (err) {
@@ -27,11 +33,19 @@ export default function EmployeeProfilesPage() {
     }
   }, []);
 
-  // Debounced search — fire 300ms after user stops typing.
+  // Debounced search — also resets to page 0 on every search change.
   useEffect(() => {
-    const t = setTimeout(() => fetchEmployees(search), 300);
+    const t = setTimeout(() => fetchEmployees(search, 0, limit), 300);
+    setPage(0);
     return () => clearTimeout(t);
-  }, [search, fetchEmployees]);
+  }, [search, limit, fetchEmployees]);
+
+  // Plain page changes — re-fetch immediately.
+  useEffect(() => {
+    if (page === 0) return; // first page already covered by the search effect
+    fetchEmployees(search, page, limit);
+    // eslint-disable-next-line
+  }, [page]);
 
   return (
     <Box sx={{ p: { xs: 2, sm: 4 }, maxWidth: 1200, mx: 'auto' }}>
@@ -98,6 +112,18 @@ export default function EmployeeProfilesPage() {
                 ))}
               </TableBody>
             </Table>
+          )}
+
+          {!loading && employees.length > 0 && (
+            <TablePagination
+              component="div"
+              count={total}
+              page={page}
+              onPageChange={(_e, newPage) => setPage(newPage)}
+              rowsPerPage={limit}
+              onRowsPerPageChange={(e) => setLimit(parseInt(e.target.value, 10))}
+              rowsPerPageOptions={[5, 10, 25, 50]}
+            />
           )}
         </Paper>
       </Stack>

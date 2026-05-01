@@ -115,7 +115,7 @@ export default function PersonalInformationPage() {
   // Whenever profile changes, reset the form so it reflects the latest server state.
   useEffect(() => {
     methods.reset(toFormValues(profile));
-  }, [profile]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [profile]);  // eslint-disable-line
 
   if (loading || !profile) return <LoadingSpinner />;
 
