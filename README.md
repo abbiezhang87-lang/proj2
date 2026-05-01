@@ -111,7 +111,6 @@ For the full step-by-step demo flow + screenshots, see **doc/HOW_TO_TEST.docx**.
 ## Deferred (with planned approach)
 
 - **TypeScript** — spec marks optional. Migrate incrementally: rename `.jsx` → `.tsx`, add types per file.
-- **Production SMTP** — code already calls nodemailer; set `SMTP_HOST/USER/PASS` in `backend/.env` (Gmail App Password or SendGrid).
 - **Token revocation / resend** — currently rely on 3-hour expiry. Approach: `DELETE /api/hr/tokens/:id` + a Resend button.
 
 ## Default credentials
