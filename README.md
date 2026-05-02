@@ -6,6 +6,8 @@ approval workflow, and an OPT visa step machine.
 
 **Figma design:** https://www.figma.com/design/0e6s7OVp4eaFRrN0uSmkFE/Untitled?node-id=1-664&t=bXubJCZnhT2qEQA8-1
 
+**Project Slides:** https://docs.google.com/presentation/d/15sv5fS6klgq0wAY-DsD8KCEJYAOQzm5O/edit?usp=sharing&ouid=106374268678134928750&rtpof=true&sd=true
+
 ## Tech stack
 
 | Layer    | Choice                                                |
