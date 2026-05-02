@@ -8,6 +8,8 @@ approval workflow, and an OPT visa step machine.
 
 **Project Slides:** https://docs.google.com/presentation/d/15sv5fS6klgq0wAY-DsD8KCEJYAOQzm5O/edit?usp=sharing&ouid=106374268678134928750&rtpof=true&sd=true
 
+**.env setup:** https://drive.google.com/file/d/1a9P5el4rzZJtE4tG7DL7gmr2WyNQy1nU/view?usp=sharing
+
 ## Tech stack
 
 | Layer    | Choice                                                |
